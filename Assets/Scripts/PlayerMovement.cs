@@ -8,12 +8,15 @@ public class PlayerMovement : MonoBehaviour
     //public CharacterController2D controller;
     float horizontalMove=0f;
     public float Speed = 30f;
+    public float jumpForce = 0.3f;
     bool facingRight = true;
     public Animator animator;
+    private Rigidbody2D m_Rigidbody2D;
+    bool jump = false;
     // Start is called before the first frame update
     void Start()
     {
-        
+        m_Rigidbody2D = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
@@ -22,6 +25,11 @@ public class PlayerMovement : MonoBehaviour
         //checks whether user pressed left arrow key or right arrow key
         horizontalMove=Input.GetAxisRaw("Horizontal");
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+        if (Input.GetButtonDown("Jump"))
+        {
+            jump = true;
+            //animator.SetBool("IsJumping", true);
+        }
     }
 
     void FixedUpdate()
@@ -34,6 +42,12 @@ public class PlayerMovement : MonoBehaviour
         else if(horizontalMove<0 && facingRight)
         {
             Flip();
+        }
+
+        if (jump)
+        {
+            m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
+            jump = false;
         }
     }
 

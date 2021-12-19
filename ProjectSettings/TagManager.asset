@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - Collectible
   layers:
   - Default
   - TransparentFX
@@ -14,7 +15,7 @@ TagManager:
   - Background
   - Middleground
   - Foreground
-  - 
+  - Collectibles
   - 
   - 
   - 
@@ -46,9 +47,6 @@ TagManager:
     locked: 0
   - name: Hills
     uniqueID: 2811787077
-    locked: 0
-  - name: Middleground
-    uniqueID: 1931292173
     locked: 0
   - name: Decoration
     uniqueID: 2645833477

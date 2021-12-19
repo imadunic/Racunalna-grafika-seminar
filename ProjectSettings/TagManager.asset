@@ -44,8 +44,14 @@ TagManager:
   - name: Background
     uniqueID: 4021349015
     locked: 0
+  - name: Hills
+    uniqueID: 2811787077
+    locked: 0
   - name: Middleground
     uniqueID: 1931292173
+    locked: 0
+  - name: Decoration
+    uniqueID: 2645833477
     locked: 0
   - name: Foreground
     uniqueID: 2008018225

@@ -1,22 +1,32 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [SerializeField] private LayerMask platformLayerMask;
 
-    //public CharacterController2D controller;
     float horizontalMove=0f;
     public float Speed = 30f;
-    public float jumpForce = 0.3f;
+    public float jumpForce = 16f;
     bool facingRight = true;
     public Animator animator;
     private Rigidbody2D m_Rigidbody2D;
+    private CircleCollider2D isGround;
     bool jump = false;
+    private bool m_Grounded;            // Whether or not the player is grounded.
+
+    public UnityEvent OnLandEvent;
+
     // Start is called before the first frame update
     void Start()
     {
+
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
+        isGround = GetComponent<CircleCollider2D>();
+        if (OnLandEvent == null)
+            OnLandEvent = new UnityEvent();
     }
 
     // Update is called once per frame
@@ -25,16 +35,53 @@ public class PlayerMovement : MonoBehaviour
         //checks whether user pressed left arrow key or right arrow key
         horizontalMove=Input.GetAxisRaw("Horizontal");
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+        //if user pressed spacebar start jump animation
         if (Input.GetButtonDown("Jump"))
         {
             jump = true;
-            //animator.SetBool("IsJumping", true);
+            animator.SetBool("Jumping", true);
         }
     }
 
+    void OnCollisionEnter(Collision theCollision)
+    {
+        Debug.Log("Grounded");
+        if (theCollision.gameObject.name == "Foreground")
+        {
+            Debug.Log("Grounded");
+            m_Grounded = true;
+        }
+    }
+
+    void OnCollisionExit(Collision theCollision)
+    {
+        Debug.Log("Grounded");
+        if (theCollision.gameObject.name == "Foreground")
+        {
+            m_Grounded = false;
+        }
+    }
+
+
     void FixedUpdate()
     {
+        bool wasGrounded = m_Grounded;
+        m_Grounded = false;
+        float extraHeight = 0.8f;
+        //casting circleRay to check if character is touching anything on Foreground layer
+        RaycastHit2D raycastHit = Physics2D.CircleCast(isGround.bounds.center, isGround.radius,Vector2.down,extraHeight,platformLayerMask);
+        if (raycastHit.collider != null)
+        {
+            m_Grounded = true;
+            //if charecter just tuched the ground trigger OnLandEvent
+            if (!wasGrounded)
+                OnLandEvent.Invoke();
+        }
+     
+
+        //calculating movement to left or right
         transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+        //turn character to face other side if needed
         if (horizontalMove > 0 && !facingRight)
         {
             Flip();
@@ -44,20 +91,27 @@ public class PlayerMovement : MonoBehaviour
             Flip();
         }
 
-        if (jump)
+        if (jump && m_Grounded)
         {
+            //add force so character jumps
             m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
             jump = false;
         }
     }
 
 
-
+    //function for turning character to face other side if needed
     private void Flip()
     {
         facingRight = !facingRight;
         Vector3 scale = transform.localScale;
         scale.x *= -1;
         transform.localScale = scale;
+    }
+
+    //called when OnLandEvent is triggered
+    public void OnLanding()
+    {
+        animator.SetBool("Jumping", false);
     }
 }

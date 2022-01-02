@@ -7,6 +7,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private LayerMask platformLayerMask;
 
+    public int cherries = 0;
     float horizontalMove=0f;
     public float Speed = 30f;
     public float jumpForce = 16f;
@@ -99,6 +100,15 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    //function for collecting cherry objects
+    private void OnTriggerEnter2D(Collider2D theCollision)
+    {
+        if(theCollision.tag == "Collectible")
+        {
+            Destroy(theCollision.gameObject);
+            cherries += 1;
+        }
+    }
 
     //function for turning character to face other side if needed
     private void Flip()

@@ -14,7 +14,7 @@ public class PlayerMovement : MonoBehaviour
     float horizontalMove=0f;
     public float Speed = 30f;
     public float jumpForce = 16f;
-    bool facingRight = true;
+    public bool facingRight = true;
     public Animator animator;
     private Rigidbody2D m_Rigidbody2D;
     private CircleCollider2D isGround;
@@ -45,21 +45,22 @@ public class PlayerMovement : MonoBehaviour
             jump = true;
             animator.SetBool("Jumping", true);
         }
+        if (m_Rigidbody2D.transform.position.y < -6f)
+        {
+            Debug.Log("Game over");
+        }
     }
 
     void OnCollisionEnter(Collision theCollision)
     {
-        Debug.Log("Grounded");
         if (theCollision.gameObject.name == "Foreground")
         {
-            Debug.Log("Grounded");
             m_Grounded = true;
         }
     }
 
     void OnCollisionExit(Collision theCollision)
     {
-        Debug.Log("Grounded");
         if (theCollision.gameObject.name == "Foreground")
         {
             m_Grounded = false;
@@ -81,10 +82,30 @@ public class PlayerMovement : MonoBehaviour
             if (!wasGrounded)
                 OnLandEvent.Invoke();
         }
-     
+        Vector3 position = isGround.bounds.center;
+        position.y = position.y - 0.5f;
+        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
+        float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
+        if (hit.collider && slopeAngle<80)
+        {
+            m_Rigidbody2D.gravityScale = 0.0f;
+            
+            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
+            transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
+        }
+        else
+        {
+            if (m_Rigidbody2D.gravityScale==0.0f)
+            {
+                m_Rigidbody2D.gravityScale = 3.5f;
+            }
+            
+            //calculating movement to left or right
+            transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+        }
 
-        //calculating movement to left or right
-        transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+
+
         //turn character to face other side if needed
         if (horizontalMove > 0 && !facingRight)
         {

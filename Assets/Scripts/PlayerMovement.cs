@@ -2,11 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private LayerMask platformLayerMask;
+    //[SerializeField] private int cherries = 0;
+    [SerializeField] private Text cherryText;
 
+    public int cherries;
     float horizontalMove=0f;
     public float Speed = 30f;
     public float jumpForce = 16f;
@@ -99,6 +103,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    //function for collecting cherry objects
+    private void OnTriggerEnter2D(Collider2D theCollision)
+    {
+        if(theCollision.tag == "Collectible")
+        {
+            Destroy(theCollision.gameObject);
+            cherries += 1;
+            cherryText.text = cherries.ToString();
+        }
+    }
 
     //function for turning character to face other side if needed
     private void Flip()

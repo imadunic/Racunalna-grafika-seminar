@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - Collectible
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -17,7 +18,6 @@ TagManager:
   - Foreground
   - Collectibles
   - PlayerLayer
-  - 
   - 
   - 
   - 

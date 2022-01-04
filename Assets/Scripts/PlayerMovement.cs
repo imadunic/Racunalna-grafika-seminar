@@ -19,6 +19,8 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D m_Rigidbody2D;
     private CircleCollider2D isGround;
     bool jump = false;
+    private bool hurt = false;
+    //public float hurtForce = 10f;
     private bool m_Grounded;            // Whether or not the player is grounded.
 
     public UnityEvent OnLandEvent;
@@ -132,6 +134,23 @@ public class PlayerMovement : MonoBehaviour
             Destroy(theCollision.gameObject);
             cherries += 1;
             cherryText.text = cherries.ToString();
+        }
+    }
+
+    //Collision with enemy
+    private void OnCollisionEnter2D(Collision2D other)
+    {
+        if(other.gameObject.tag == "Enemy")
+        {
+            if(m_Grounded == false)
+            {
+                Destroy(other.gameObject);
+            }
+            else
+            {
+                hurt = true;
+               // Kod za kada je igrac povrijeden
+            }
         }
     }
 

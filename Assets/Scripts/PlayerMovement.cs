@@ -19,8 +19,9 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D m_Rigidbody2D;
     private CircleCollider2D isGround;
     bool jump = false;
-    private bool hurt = false;
-    //public float hurtForce = 10f;
+    private bool jumped=false;
+    private bool hurt;
+    public float hurtForce = 0.1f;
     private bool m_Grounded;            // Whether or not the player is grounded.
 
     public UnityEvent OnLandEvent;
@@ -72,38 +73,64 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        bool wasGrounded = m_Grounded;
-        m_Grounded = false;
-        float extraHeight = 0.8f;
-        //casting circleRay to check if character is touching anything on Foreground layer
-        RaycastHit2D raycastHit = Physics2D.CircleCast(isGround.bounds.center, isGround.radius,Vector2.down,extraHeight,platformLayerMask);
-        if (raycastHit.collider != null)
-        {
-            m_Grounded = true;
-            //if charecter just tuched the ground trigger OnLandEvent
-            if (!wasGrounded)
-                OnLandEvent.Invoke();
-        }
+
+        
+        CheckIfGrounded();
+
+        //RaycastHit2D slopeHit = CheckIfSlope();
+        RaycastHit2D slopeHit;
+        //cast ray to check if checracter is climbing on slope
         Vector3 position = isGround.bounds.center;
         position.y = position.y - 0.5f;
-        RaycastHit2D hit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
-        float slopeAngle = Vector2.Angle(hit.normal, Vector2.up);
-        if (hit.collider && slopeAngle<80)
+        //check which direction character is facing and based on direction draw ray to chech wether it is on a slope
+        if (facingRight)
         {
+            slopeHit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
+            //Debug.DrawRay(position, Vector2.right, Color.red, 0.8f);
+        }
+        else
+        {
+            slopeHit = Physics2D.Raycast(position, Vector2.left, 0.8f, platformLayerMask);
+            //Debug.DrawRay(position, Vector2.left, Color.red, 0.8f);
+        }
+
+        float slopeAngle = Vector2.Angle(slopeHit.normal, Vector2.up);
+        float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
+        //if it is on a slope and spacebar is pressed enable jump
+        if (slopeHit.collider && slopeAngle<80 && jump)
+        {
+            m_Rigidbody2D.gravityScale = 3.5f;
+            m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
+            jump = false;
+            jumped = true;
+        }
+        //if it is on a slope move manually
+        else if (slopeHit.collider && slopeAngle < 80)
+        {
+            if (jumped)
+            {
+                jumped = false;
+                OnLanding();
+            }
             m_Rigidbody2D.gravityScale = 0.0f;
-            
-            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
+            Debug.Log(m_Rigidbody2D.gravityScale);
+            Debug.Log(horizontalMove);
+            Debug.Log(climbVelocityY);
             transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
         }
+        //if it is not on a slope turn gravity back on and move it
         else
         {
             if (m_Rigidbody2D.gravityScale==0.0f)
             {
                 m_Rigidbody2D.gravityScale = 3.5f;
             }
-            
-            //calculating movement to left or right
-            transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+            if ((Mathf.Abs(m_Rigidbody2D.velocity.x)<0.1f))
+            {
+                //calculating movement to left or right
+                transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+            }
+
         }
 
 
@@ -126,6 +153,43 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void CheckIfGrounded()
+    {
+        //store if player was grounded in previous frame
+        bool wasGrounded = m_Grounded;
+        m_Grounded = false;
+        float extraHeight = 1f;
+        //casting circleRay to check if character is touching anything on Foreground layer
+        RaycastHit2D raycastHit = Physics2D.CircleCast(isGround.bounds.center, isGround.radius, Vector2.down, extraHeight, platformLayerMask);
+        if (raycastHit.collider != null)
+        {
+            m_Grounded = true;
+            //if charecter just tuched the ground trigger OnLandEvent
+            if (!wasGrounded)
+                OnLandEvent.Invoke();
+        }
+    }
+
+    private RaycastHit2D CheckIfSlope()
+    {
+        RaycastHit2D hit;
+        //cast ray to check if checracter is climbing on slope
+        Vector3 position = isGround.bounds.center;
+        position.y = position.y - 0.5f;
+        //check which direction character is facing and based on direction draw ray to chech wether it is on a slope
+        if (facingRight)
+        {
+            hit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
+            Debug.DrawRay(position, Vector2.right, Color.red, 0.8f);
+        }
+        else
+        {
+            hit = Physics2D.Raycast(position, Vector2.left, 0.8f, platformLayerMask);
+            Debug.DrawRay(position, Vector2.left, Color.red, 0.8f);
+        }
+        return hit;
+    }
+
     //function for collecting cherry objects
     private void OnTriggerEnter2D(Collider2D theCollision)
     {
@@ -145,11 +209,22 @@ public class PlayerMovement : MonoBehaviour
             if(m_Grounded == false)
             {
                 Destroy(other.gameObject);
+                m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
             }
+            // player is hurt
             else
             {
                 hurt = true;
-               // Kod za kada je igrac povrijeden
+                Animator a = other.gameObject.GetComponent<Animator>();
+                a.SetTrigger("Crash");
+                if (other.gameObject.transform.position.x > transform.position.x)
+                {
+                    m_Rigidbody2D.velocity = new Vector2(-hurtForce, 0);
+                }
+                else
+                {
+                    m_Rigidbody2D.velocity = new Vector2(hurtForce, 0);
+                }
             }
         }
     }

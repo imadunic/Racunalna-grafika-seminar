@@ -9,6 +9,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask platformLayerMask;
     //[SerializeField] private int cherries = 0;
     [SerializeField] private Text cherryText;
+    [SerializeField] private Text lifesText;
 
     public int cherries;
     float horizontalMove = 0f;
@@ -18,10 +19,11 @@ public class PlayerMovement : MonoBehaviour
     public Animator animator;
     private Rigidbody2D m_Rigidbody2D;
     private CircleCollider2D isGround;
+    private int lifes;
     bool jump = false;
     private bool jumped = false;
     private bool hurt;
-    public float hurtForce = 0.1f;
+    public float hurtForce = 10f;
     private bool m_Grounded;            // Whether or not the player is grounded.
 
     public UnityEvent OnLandEvent;
@@ -31,6 +33,7 @@ public class PlayerMovement : MonoBehaviour
     {
 
         m_Rigidbody2D = GetComponent<Rigidbody2D>();
+        lifes = 4;
         isGround = GetComponent<CircleCollider2D>();
         if (OnLandEvent == null)
             OnLandEvent = new UnityEvent();
@@ -39,19 +42,27 @@ public class PlayerMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //checks whether user pressed left arrow key or right arrow key
-        horizontalMove = Input.GetAxisRaw("Horizontal");
-        animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
-        //if user pressed spacebar start jump animation
-        if (Input.GetButtonDown("Jump"))
+        if ((m_Rigidbody2D.transform.position.y < -6f) || (lifes<=0) )
         {
-            jump = true;
-            animator.SetBool("Jumping", true);
-        }
-        if (m_Rigidbody2D.transform.position.y < -6f)
-        {
+            horizontalMove = 0;
+            animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+            jump = false;
             Debug.Log("Game over");
+            //code for end of game
         }
+        else
+        {
+            //checks whether user pressed left arrow key or right arrow key
+            horizontalMove = Input.GetAxisRaw("Horizontal");
+            animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
+            //if user pressed spacebar start jump animation
+            if (Input.GetButtonDown("Jump"))
+            {
+                jump = true;
+                animator.SetBool("Jumping", true);
+            }
+        }
+
     }
 
     void OnCollisionEnter(Collision theCollision)
@@ -89,24 +100,16 @@ public class PlayerMovement : MonoBehaviour
             hitBack = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
         }
         float slopeAngle = Vector2.Angle(hitFront.normal, Vector2.up);
-        float slopeAngleBack = Vector2.Angle(hitBack.normal, Vector2.up);
         if (jump)
         {
             m_Rigidbody2D.gravityScale = 3.5f;
             m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
             jump = false;
         }
-        else if (hitFront.collider && slopeAngle < 95)
+        else if (hitFront.collider && slopeAngle < 90)
         {
             m_Rigidbody2D.gravityScale = 0.0f;
 
-            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
-            transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
-        }
-
-        else if (hitBack.collider && slopeAngleBack<95)
-        {
-            m_Rigidbody2D.gravityScale = 0.0f;
             float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
             transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
         }
@@ -114,8 +117,12 @@ public class PlayerMovement : MonoBehaviour
         {
             m_Rigidbody2D.gravityScale = 3.5f;
 
-            //calculating movement to left or right
-            transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+            if (Mathf.Abs(m_Rigidbody2D.velocity.x) < 0.01f)
+            {
+                //calculating movement to left or right
+                transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
+            }
+
         }
 
 
@@ -181,6 +188,8 @@ public class PlayerMovement : MonoBehaviour
             else
             {
                 hurt = true;
+                lifes -= 1;
+                lifesText.text = lifes.ToString();
                 Animator a = other.gameObject.GetComponent<Animator>();
                 a.SetTrigger("Crash");
                 if (other.gameObject.transform.position.x > transform.position.x)

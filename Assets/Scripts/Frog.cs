@@ -14,6 +14,7 @@ public class Frog : MonoBehaviour
     private int counter;
     private Rigidbody2D rb;
     private bool facingLeft = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -53,7 +54,6 @@ public class Frog : MonoBehaviour
         float extraHeight = 1f;
         //casting circleRay to check if character is touching anything on Foreground layer
         RaycastHit2D raycastHit = Physics2D.BoxCast(isGround.bounds.center, isGround.size,0f, Vector2.down, extraHeight, platformLayerMask);
-        Debug.Log(raycastHit.collider);
         if (raycastHit.collider != null)
         {
             m_Grounded = true;

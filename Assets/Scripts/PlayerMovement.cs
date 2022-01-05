@@ -11,7 +11,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Text cherryText;
 
     public int cherries;
-    float horizontalMove=0f;
+    float horizontalMove = 0f;
     public float Speed = 30f;
     public float jumpForce = 16f;
     public bool facingRight = true;
@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D m_Rigidbody2D;
     private CircleCollider2D isGround;
     bool jump = false;
-    private bool jumped=false;
+    private bool jumped = false;
     private bool hurt;
     public float hurtForce = 0.1f;
     private bool m_Grounded;            // Whether or not the player is grounded.
@@ -40,7 +40,7 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         //checks whether user pressed left arrow key or right arrow key
-        horizontalMove=Input.GetAxisRaw("Horizontal");
+        horizontalMove = Input.GetAxisRaw("Horizontal");
         animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
         //if user pressed spacebar start jump animation
         if (Input.GetButtonDown("Jump"))
@@ -73,64 +73,49 @@ public class PlayerMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-
-        
         CheckIfGrounded();
-
-        //RaycastHit2D slopeHit = CheckIfSlope();
-        RaycastHit2D slopeHit;
-        //cast ray to check if checracter is climbing on slope
         Vector3 position = isGround.bounds.center;
-        position.y = position.y - 0.5f;
-        //check which direction character is facing and based on direction draw ray to chech wether it is on a slope
+        position.y = position.y - 0.7f;
+        RaycastHit2D hitFront;
+        RaycastHit2D hitBack;
         if (facingRight)
         {
-            slopeHit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
-            //Debug.DrawRay(position, Vector2.right, Color.red, 0.8f);
+            hitFront = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
+            hitBack = Physics2D.Raycast(position, Vector2.left, 1f, platformLayerMask);
         }
         else
         {
-            slopeHit = Physics2D.Raycast(position, Vector2.left, 0.8f, platformLayerMask);
-            //Debug.DrawRay(position, Vector2.left, Color.red, 0.8f);
+            hitFront = Physics2D.Raycast(position, Vector2.left, 1f, platformLayerMask);
+            hitBack = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
         }
-
-        float slopeAngle = Vector2.Angle(slopeHit.normal, Vector2.up);
-        float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
-        //if it is on a slope and spacebar is pressed enable jump
-        if (slopeHit.collider && slopeAngle<80 && jump)
+        float slopeAngle = Vector2.Angle(hitFront.normal, Vector2.up);
+        float slopeAngleBack = Vector2.Angle(hitBack.normal, Vector2.up);
+        if (jump)
         {
             m_Rigidbody2D.gravityScale = 3.5f;
             m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
             jump = false;
-            jumped = true;
         }
-        //if it is on a slope move manually
-        else if (slopeHit.collider && slopeAngle < 80)
+        else if (hitFront.collider && slopeAngle < 95)
         {
-            if (jumped)
-            {
-                jumped = false;
-                OnLanding();
-            }
             m_Rigidbody2D.gravityScale = 0.0f;
-            Debug.Log(m_Rigidbody2D.gravityScale);
-            Debug.Log(horizontalMove);
-            Debug.Log(climbVelocityY);
+
+            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
             transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
         }
-        //if it is not on a slope turn gravity back on and move it
+
+        else if (hitBack.collider && slopeAngleBack<95)
+        {
+            m_Rigidbody2D.gravityScale = 0.0f;
+            float climbVelocityY = Mathf.Sin(slopeAngle * Mathf.Deg2Rad);
+            transform.position += new Vector3(horizontalMove, climbVelocityY, 0) * Time.fixedDeltaTime * Speed;
+        }
         else
         {
-            if (m_Rigidbody2D.gravityScale==0.0f)
-            {
-                m_Rigidbody2D.gravityScale = 3.5f;
-            }
-            if ((Mathf.Abs(m_Rigidbody2D.velocity.x)<0.1f))
-            {
-                //calculating movement to left or right
-                transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
-            }
+            m_Rigidbody2D.gravityScale = 3.5f;
 
+            //calculating movement to left or right
+            transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
         }
 
 
@@ -140,7 +125,7 @@ public class PlayerMovement : MonoBehaviour
         {
             Flip();
         }
-        else if(horizontalMove<0 && facingRight)
+        else if (horizontalMove < 0 && facingRight)
         {
             Flip();
         }
@@ -158,7 +143,7 @@ public class PlayerMovement : MonoBehaviour
         //store if player was grounded in previous frame
         bool wasGrounded = m_Grounded;
         m_Grounded = false;
-        float extraHeight = 1f;
+        float extraHeight = 1.5f;
         //casting circleRay to check if character is touching anything on Foreground layer
         RaycastHit2D raycastHit = Physics2D.CircleCast(isGround.bounds.center, isGround.radius, Vector2.down, extraHeight, platformLayerMask);
         if (raycastHit.collider != null)
@@ -170,30 +155,11 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private RaycastHit2D CheckIfSlope()
-    {
-        RaycastHit2D hit;
-        //cast ray to check if checracter is climbing on slope
-        Vector3 position = isGround.bounds.center;
-        position.y = position.y - 0.5f;
-        //check which direction character is facing and based on direction draw ray to chech wether it is on a slope
-        if (facingRight)
-        {
-            hit = Physics2D.Raycast(position, Vector2.right, 0.8f, platformLayerMask);
-            Debug.DrawRay(position, Vector2.right, Color.red, 0.8f);
-        }
-        else
-        {
-            hit = Physics2D.Raycast(position, Vector2.left, 0.8f, platformLayerMask);
-            Debug.DrawRay(position, Vector2.left, Color.red, 0.8f);
-        }
-        return hit;
-    }
 
     //function for collecting cherry objects
     private void OnTriggerEnter2D(Collider2D theCollision)
     {
-        if(theCollision.tag == "Collectible")
+        if (theCollision.tag == "Collectible")
         {
             Destroy(theCollision.gameObject);
             cherries += 1;
@@ -204,9 +170,9 @@ public class PlayerMovement : MonoBehaviour
     //Collision with enemy
     private void OnCollisionEnter2D(Collision2D other)
     {
-        if(other.gameObject.tag == "Enemy")
+        if (other.gameObject.tag == "Enemy")
         {
-            if(m_Grounded == false)
+            if (m_Grounded == false)
             {
                 Destroy(other.gameObject);
                 m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);

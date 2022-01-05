@@ -21,8 +21,6 @@ public class PlayerMovement : MonoBehaviour
     private CircleCollider2D isGround;
     private int lifes;
     bool jump = false;
-    private bool jumped = false;
-    private bool hurt;
     public float hurtForce = 10f;
     private bool m_Grounded;            // Whether or not the player is grounded.
 
@@ -187,7 +185,6 @@ public class PlayerMovement : MonoBehaviour
             // player is hurt
             else
             {
-                hurt = true;
                 lifes -= 1;
                 lifesText.text = lifes.ToString();
                 Animator a = other.gameObject.GetComponent<Animator>();

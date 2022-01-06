@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -45,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
             horizontalMove = 0;
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
             jump = false;
-            Debug.Log("Game over");
+            SceneManager.LoadScene("GameOver");
             //code for end of game
         }
         else
@@ -98,13 +99,7 @@ public class PlayerMovement : MonoBehaviour
             hitBack = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
         }
         float slopeAngle = Vector2.Angle(hitFront.normal, Vector2.up);
-        if (jump)
-        {
-            m_Rigidbody2D.gravityScale = 3.5f;
-            m_Rigidbody2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
-            jump = false;
-        }
-        else if (hitFront.collider && slopeAngle < 90)
+        if (hitFront.collider && slopeAngle < 90)
         {
             m_Rigidbody2D.gravityScale = 0.0f;
 

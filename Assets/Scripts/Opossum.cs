@@ -39,7 +39,6 @@ public class Opossum : MonoBehaviour
 
     private void TurnRight()
     {
-        Debug.Log("Right");
         if (facingLeft)
         {
             Flip();

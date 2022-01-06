@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -45,7 +46,7 @@ public class PlayerMovement : MonoBehaviour
             horizontalMove = 0;
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
             jump = false;
-            Debug.Log("Game over");
+            SceneManager.LoadScene("GameOver");
             //code for end of game
         }
         else

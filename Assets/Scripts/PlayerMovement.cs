@@ -47,8 +47,8 @@ public class PlayerMovement : MonoBehaviour
             animator.SetFloat("Speed", Mathf.Abs(horizontalMove));
             jump = false;
             SceneManager.LoadScene("GameOver");
-            //code for end of game
         }
+
         else
         {
             //checks whether user pressed left arrow key or right arrow key
@@ -64,22 +64,6 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    void OnCollisionEnter(Collision theCollision)
-    {
-        if (theCollision.gameObject.name == "Foreground")
-        {
-            m_Grounded = true;
-        }
-    }
-
-    void OnCollisionExit(Collision theCollision)
-    {
-        if (theCollision.gameObject.name == "Foreground")
-        {
-            m_Grounded = false;
-        }
-    }
-
 
     void FixedUpdate()
     {
@@ -87,16 +71,15 @@ public class PlayerMovement : MonoBehaviour
         Vector3 position = isGround.bounds.center;
         position.y = position.y - 0.7f;
         RaycastHit2D hitFront;
-        RaycastHit2D hitBack;
         if (facingRight)
         {
             hitFront = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
-            hitBack = Physics2D.Raycast(position, Vector2.left, 1f, platformLayerMask);
+            Debug.DrawRay(position, Vector2.right, Color.red, 1f);
         }
         else
         {
             hitFront = Physics2D.Raycast(position, Vector2.left, 1f, platformLayerMask);
-            hitBack = Physics2D.Raycast(position, Vector2.right, 1f, platformLayerMask);
+            Debug.DrawRay(position, Vector2.left, Color.red, 1f);
         }
         float slopeAngle = Vector2.Angle(hitFront.normal, Vector2.up);
         if (hitFront.collider && slopeAngle < 90)
@@ -109,17 +92,12 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             m_Rigidbody2D.gravityScale = 3.5f;
-
             if (Mathf.Abs(m_Rigidbody2D.velocity.x) < 0.01f)
             {
                 //calculating movement to left or right
                 transform.position += new Vector3(horizontalMove, 0, 0) * Time.fixedDeltaTime * Speed;
             }
-
         }
-
-
-
         //turn character to face other side if needed
         if (horizontalMove > 0 && !facingRight)
         {
@@ -182,8 +160,6 @@ public class PlayerMovement : MonoBehaviour
             {
                 lifes -= 1;
                 lifesText.text = lifes.ToString();
-                Animator a = other.gameObject.GetComponent<Animator>();
-                a.SetTrigger("Crash");
                 if (other.gameObject.transform.position.x > transform.position.x)
                 {
                     m_Rigidbody2D.velocity = new Vector2(-hurtForce, 0);

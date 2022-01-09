@@ -20,7 +20,7 @@ public class Opossum : MonoBehaviour
     {
         if (facingLeft)
         {
-            transform.position += new Vector3(-1, 0,0) * Time.fixedDeltaTime * speed; ;
+            transform.position += new Vector3(-1, 0,0) * Time.fixedDeltaTime * speed; 
         }
         else
         {

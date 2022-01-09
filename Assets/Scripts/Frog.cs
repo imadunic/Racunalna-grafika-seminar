@@ -48,16 +48,17 @@ public class Frog : MonoBehaviour
 
     private void CheckIfGrounded()
     {
-        //store if player was grounded in previous frame
+        //store if frog was grounded in previous frame
         bool wasGrounded = m_Grounded;
         m_Grounded = false;
         float extraHeight = 1f;
         //casting circleRay to check if character is touching anything on Foreground layer
-        RaycastHit2D raycastHit = Physics2D.BoxCast(isGround.bounds.center, isGround.size,0f, Vector2.down, extraHeight, platformLayerMask);
+        RaycastHit2D raycastHit = Physics2D.BoxCast(isGround.bounds.center, isGround.size,0f, 
+            Vector2.down, extraHeight, platformLayerMask);
         if (raycastHit.collider != null)
         {
             m_Grounded = true;
-            //if charecter just tuched the ground trigger OnLandEvent
+            //if character just touched the ground trigger OnLandEvent
             if (!wasGrounded)
             {
                 anim.SetBool("Jumping", false);
